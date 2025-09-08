@@ -289,7 +289,7 @@ impl PlaybackDevice for CpalPlaybackDevice {
                                         }
                                         write_data_to_device(buffer, &mut sample_queue);
                                         buffer_fill_clone
-                                            .store(sample_queue.len(), Ordering::Relaxed);
+                                            .fetch_sub(buffer.len(), Ordering::Relaxed);
                                         if clipped > 0 {
                                             playback_status_clone
                                                 .write()
@@ -344,7 +344,7 @@ impl PlaybackDevice for CpalPlaybackDevice {
                                         }
                                         write_data_to_device(buffer, &mut sample_queue);
                                         buffer_fill_clone
-                                            .store(sample_queue.len(), Ordering::Relaxed);
+                                            .fetch_sub(buffer.len(), Ordering::Relaxed);
                                         if clipped > 0 {
                                             playback_status_clone
                                                 .write()
@@ -405,6 +405,8 @@ impl PlaybackDevice for CpalPlaybackDevice {
                                         }
                                     }
 
+                                    let samples = chunk.valid_frames * channels_clone;
+                                    buffer_fill.fetch_add(samples, Ordering::Relaxed);
                                     tx_dev.send(chunk).unwrap();
                                 }
                                 Ok(AudioMessage::Pause) => {
